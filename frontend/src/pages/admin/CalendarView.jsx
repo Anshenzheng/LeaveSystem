@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import { Card, Select, Tag, Button, List, Badge, DatePicker, Row, Col, message, Space, Modal, Descriptions } from 'antd'
+import { Card, Select, Tag, Button, List, Badge, DatePicker, Row, Col, message, Space, Modal, Descriptions, Calendar } from 'antd'
 import { calendarApi, departmentApi } from '../../services/api'
 import dayjs from 'dayjs'
-import locale from 'antd/es/date-picker/locale/zh_CN'
+import locale from 'antd/es/calendar/locale/zh_CN'
 
 const CalendarView = () => {
   const [calendarData, setCalendarData] = useState([])
@@ -164,7 +164,7 @@ const CalendarView = () => {
         }
         loading={loading}
       >
-        <DatePicker.Calendar
+        <Calendar
           fullscreen={false}
           value={selectedDate}
           cellRender={dateCellRender}

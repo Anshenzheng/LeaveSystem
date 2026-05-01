@@ -181,12 +181,19 @@ def update_user(user_id):
 @app.route('/api/leave-types', methods=['GET'])
 @login_required
 def get_leave_types():
-    leave_types = LeaveType.query.filter_by(is_active=True).all()
+    user = User.query.get(session['user_id'])
+    
+    if user.role in ['admin', 'manager']:
+        leave_types = LeaveType.query.all()
+    else:
+        leave_types = LeaveType.query.filter_by(is_active=True).all()
+    
     return jsonify([{
         'id': lt.id,
         'name': lt.name,
         'code': lt.code,
-        'description': lt.description
+        'description': lt.description,
+        'is_active': lt.is_active
     } for lt in leave_types])
 
 @app.route('/api/leave-types', methods=['POST'])
@@ -474,10 +481,18 @@ def create_application():
     if not quota:
         return jsonify({'error': '没有找到对应年度的假期额度'}), 400
     
-    remaining = quota.total_days - quota.used_days
+    pending_applications = LeaveApplication.query.filter(
+        LeaveApplication.employee_id == user.id,
+        LeaveApplication.leave_type_id == data['leave_type_id'],
+        LeaveApplication.status == 'pending'
+    ).all()
+    
+    pending_days = sum(app.days for app in pending_applications)
+    remaining = quota.total_days - quota.used_days - pending_days
+    
     if days > remaining:
         return jsonify({
-            'error': f'假期额度不足，剩余 {remaining} 天，申请 {days} 天'
+            'error': f'假期额度不足，剩余可用 {remaining} 天（含待审核申请占用），申请 {days} 天'
         }), 400
     
     overlapping = LeaveApplication.query.filter(
